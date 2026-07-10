@@ -1261,38 +1261,23 @@
       return resultText(result) + "\n\n测试入口：" + shareUrl() + "\n" + suffix;
     }
 
-    function openShareChannel(channel) {
+    async function openShareChannel(channel) {
       if (!state.lastResult) return;
       var result = state.lastResult;
-      var url = shareUrl();
       var title = "我的 NBAI 结果是 " + result.persona.key + "（" + result.persona.nickname + "）";
-      var summary = "匹配度 " + result.match + "%，来测测你的 AI 人格。";
-      var encodedUrl = encodeURIComponent(url);
-      var encodedTitle = encodeURIComponent(title);
-      var encodedSummary = encodeURIComponent(summary);
-      var target = "";
-      if (channel === "QQ") {
-        target = "https://connect.qq.com/widget/shareqq/index.html?url=" + encodedUrl + "&title=" + encodedTitle + "&summary=" + encodedSummary;
-      } else if (channel === "QQ 空间") {
-        target = "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=" + encodedUrl + "&title=" + encodedTitle + "&summary=" + encodedSummary;
-      } else if (channel === "微博" || channel === "动态") {
-        target = "https://service.weibo.com/share/share.php?url=" + encodedUrl + "&title=" + encodeURIComponent(title + "｜" + summary);
+      try {
+        var blob = await createShareImageBlob(result);
+        showGeneratedShareImage(blob, result, channel);
+        var file = new File([blob], "NBAI-" + result.persona.key + ".png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({ files: [file], title: title });
+          toast("已打开图片分享面板。");
+          return;
+        }
+        toast("结果图已生成，长按图片发到" + channel + "。");
+      } catch (error) {
+        toast("结果图生成失败，刷新后再试。");
       }
-
-      copyText(shareText(result, channel));
-      if (target) {
-        window.open(target, "_blank", "noopener,noreferrer");
-        toast(channel + "分享页已打开，文案也复制好了。");
-        return;
-      }
-      if (navigator.share) {
-        navigator.share({ title: title, text: summary, url: url }).catch(function () {
-          toast(channel + "文案已复制，去粘贴分享。");
-        });
-        return;
-      }
-      window.location.href = "weixin://";
-      toast(channel + "文案已复制，打开后粘贴分享。");
     }
 
     function renderShareOverlay() {
@@ -1392,7 +1377,7 @@
       });
     }
 
-    function showGeneratedShareImage(blob, result) {
+    function showGeneratedShareImage(blob, result, channel) {
       if (generatedShareObjectUrl) URL.revokeObjectURL(generatedShareObjectUrl);
       generatedShareObjectUrl = URL.createObjectURL(blob);
       var panel = byId("shareOverlay").querySelector(".share-panel");
@@ -1404,7 +1389,7 @@
         '<div class="share-save-preview">' +
         '<img src="' + generatedShareObjectUrl + '" alt="NBAI 分享结果图">' +
         '</div>' +
-        '<p class="share-save-tip">图片已生成。手机端请长按图片保存到相册；支持系统分享的浏览器会弹出分享面板。</p>';
+        '<p class="share-save-tip">结果图已生成。' + escapeHtml(channel ? "长按图片发到" + channel + "；支持系统分享的浏览器会直接弹出分享面板。" : "手机端请长按图片保存到相册；支持系统分享的浏览器会弹出分享面板。") + '</p>';
       if (existing) {
         existing.outerHTML = html;
       } else {
@@ -1412,9 +1397,7 @@
       }
     }
 
-    async function downloadShareImage() {
-      if (!state.lastResult) return;
-      var result = state.lastResult;
+    async function createShareImageBlob(result) {
       var canvas = document.createElement("canvas");
       canvas.width = 900;
       canvas.height = 1200;
@@ -1471,14 +1454,19 @@
       ctx.fillStyle = "#66736b";
       ctx.font = "700 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
       ctx.fillText("搜索 NBAI，或扫码重新进入测试页面", 450, 1140);
+      return canvasToBlob(canvas);
+    }
 
+    async function downloadShareImage() {
+      if (!state.lastResult) return;
+      var result = state.lastResult;
       try {
-        var blob = await canvasToBlob(canvas);
+        var blob = await createShareImageBlob(result);
         showGeneratedShareImage(blob, result);
         var file = new File([blob], "NBAI-" + result.persona.key + ".png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
           try {
-            await navigator.share({ files: [file], title: "NBAI 测试结果", text: shareText(result) });
+            await navigator.share({ files: [file], title: "NBAI 测试结果" });
             toast("系统分享面板已打开。");
             return;
           } catch (error) {
@@ -1498,7 +1486,7 @@
         }
         toast("图片已生成，长按保存到相册。");
       } catch (error) {
-        copyText(shareText(result)).then(function () { toast("图片保存失败，已复制分享链接。"); });
+        toast("图片生成失败，刷新后再试。");
       }
     }
 
