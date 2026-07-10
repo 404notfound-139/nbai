@@ -388,6 +388,145 @@
       z-index: 100;
     }
     .toast.show { opacity: 1; }
+    body.share-open { overflow: hidden; }
+    .share-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(12, 18, 15, .78);
+      backdrop-filter: blur(4px);
+    }
+    .share-panel {
+      width: min(640px, 100%);
+      display: grid;
+      justify-items: center;
+      gap: 22px;
+    }
+    .share-card {
+      width: min(440px, calc(100vw - 54px));
+      padding: 22px;
+      border-radius: 18px;
+      background: #f8fcf8;
+      box-shadow: 0 28px 90px rgba(0,0,0,.36);
+    }
+    .share-card-poster {
+      padding: 18px 18px 0;
+      background: #fff;
+      text-align: center;
+    }
+    .share-card-title {
+      margin: 0 0 6px;
+      color: #5d675f;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    .share-card-type {
+      margin: 0;
+      color: var(--green);
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+    .share-card-key {
+      margin: 4px 0 0;
+      color: #185c33;
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .share-card-img {
+      display: block;
+      width: min(260px, 72%);
+      margin: 8px auto 0;
+      mix-blend-mode: multiply;
+    }
+    .share-card-meta {
+      display: grid;
+      grid-template-columns: 1fr 118px;
+      gap: 16px;
+      align-items: end;
+      padding-top: 18px;
+    }
+    .share-card-label {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .share-card-main {
+      margin: 0;
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+    .share-card-match {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .share-card-foot {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+    .share-qr {
+      width: 118px;
+      height: 118px;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .share-actions {
+      width: min(620px, 100%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px 24px;
+    }
+    .share-action {
+      width: 76px;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      color: #fff;
+      background: transparent;
+      font-weight: 800;
+    }
+    .share-icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
+    }
+    .share-icon.save { background: #6468d9; }
+    .share-icon.wechat { background: #56bd43; }
+    .share-icon.moments { background: #62cdb9; }
+    .share-icon.qq { background: #45a8ec; }
+    .share-icon.qzone { background: #f6c44d; }
+    .share-icon.feed { background: #f56598; }
+    .share-icon.weibo { background: #ed4d3f; }
+    .share-close {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.28);
+      font-size: 34px;
+      line-height: 1;
+    }
     @media (max-width: 640px) {
       .shell { width: min(100% - 20px, 920px); margin: 20px auto; }
       .actions { flex-direction: column; }
@@ -401,6 +540,16 @@
       .section { padding: 20px; }
       .result-summary { padding: 20px; }
       .dim-top { display: block; }
+      .share-overlay { align-items: flex-start; overflow: auto; padding: 20px 12px; }
+      .share-card { padding: 16px; }
+      .share-card-title { font-size: 20px; }
+      .share-card-type { font-size: 30px; }
+      .share-card-key { font-size: 24px; }
+      .share-card-meta { grid-template-columns: 1fr 102px; }
+      .share-qr { width: 102px; height: 102px; }
+      .share-actions { gap: 16px 12px; }
+      .share-action { width: 70px; }
+      .share-icon { width: 54px; height: 54px; }
     }
   </style>
 </head>
@@ -412,6 +561,7 @@
     <section id="result" class="hidden card"></section>
   </main>
   <div id="toast" class="toast" aria-live="polite"></div>
+  <div id="shareOverlay" class="share-overlay hidden" aria-modal="true" role="dialog"></div>
   <script>
     var DIMENSIONS = [
       { key: "context", code: "C1", name: "上下文投喂", roasts: { L: "聊天记录丢了也能活，甚至觉得重开很清爽。", M: "重要信息会补，废话也会偶尔让 AI 自己猜。", H: "你恨不得给 AI 塞一份个人设定、项目史和上一季剧情回顾。" } },
@@ -1077,6 +1227,179 @@
       ].join("\n");
     }
 
+    function shareUrl() {
+      return "https://404notfound-139.github.io/nbai/";
+    }
+
+    function qrUrl() {
+      return "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=" + encodeURIComponent(shareUrl());
+    }
+
+    function shareText(result, channel) {
+      var suffix = channel ? "准备发到 " + channel + "。" : "准备发疯。";
+      return resultText(result) + "\n\n测试入口：" + shareUrl() + "\n" + suffix;
+    }
+
+    function renderShareOverlay() {
+      if (!state.lastResult) return;
+      var result = state.lastResult;
+      var personaImageSrc = "personas/" + encodeURIComponent(result.persona.key) + ".png";
+      byId("shareOverlay").innerHTML =
+        '<div class="share-panel">' +
+        '<div class="share-card" id="shareCard">' +
+        '<div class="share-card-poster">' +
+        '<p class="share-card-title">你的 AI 人格类型是：</p>' +
+        '<p class="share-card-type">' + escapeHtml(result.persona.nickname) + '</p>' +
+        '<p class="share-card-key">' + escapeHtml(result.persona.key) + '</p>' +
+        '<img class="share-card-img" src="' + personaImageSrc + '" alt="' + escapeHtml(result.persona.key) + ' 小人">' +
+        '</div>' +
+        '<div class="share-card-meta">' +
+        '<div>' +
+        '<p class="share-card-label">你的主类型</p>' +
+        '<p class="share-card-main">' + escapeHtml(result.persona.key) + '（' + escapeHtml(result.persona.nickname) + '）</p>' +
+        '<p class="share-card-match">匹配度 ' + result.match + '% · 精准命中 ' + result.hitCount + '/15 维</p>' +
+        '</div>' +
+        '<img class="share-qr" src="' + qrUrl() + '" alt="NBAI 测试二维码">' +
+        '</div>' +
+        '<p class="share-card-foot">扫码或搜索 NBAI，重新进入测试页面</p>' +
+        '</div>' +
+        '<div class="share-actions">' +
+        shareButton("save-share-image", "保存到本地", "↓", "save") +
+        shareButton("share-channel", "微信", "微", "wechat", "微信") +
+        shareButton("share-channel", "朋友圈", "朋", "moments", "朋友圈") +
+        shareButton("share-channel", "QQ", "Q", "qq", "QQ") +
+        shareButton("share-channel", "QQ 空间", "星", "qzone", "QQ 空间") +
+        shareButton("share-channel", "动态", "动", "feed", "动态") +
+        shareButton("share-channel", "微博", "博", "weibo", "微博") +
+        '</div>' +
+        '<button class="share-close" data-action="close-share" aria-label="关闭分享弹窗">×</button>' +
+        '</div>';
+      byId("shareOverlay").classList.remove("hidden");
+      document.body.classList.add("share-open");
+    }
+
+    function shareButton(action, label, icon, kind, channel) {
+      return '<button class="share-action" data-action="' + action + '"' +
+        (channel ? ' data-channel="' + escapeHtml(channel) + '"' : "") +
+        '><span class="share-icon ' + kind + '">' + escapeHtml(icon) + '</span><span>' + escapeHtml(label) + '</span></button>';
+    }
+
+    function closeShareOverlay() {
+      byId("shareOverlay").classList.add("hidden");
+      byId("shareOverlay").innerHTML = "";
+      document.body.classList.remove("share-open");
+    }
+
+    function loadImage(src, anonymous) {
+      return new Promise(function (resolve, reject) {
+        var image = new Image();
+        if (anonymous) image.crossOrigin = "anonymous";
+        image.onload = function () { resolve(image); };
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+      var chars = String(text).split("");
+      var line = "";
+      var lines = [];
+      chars.forEach(function (char) {
+        var next = line + char;
+        if (ctx.measureText(next).width > maxWidth && line) {
+          lines.push(line);
+          line = char;
+        } else {
+          line = next;
+        }
+      });
+      if (line) lines.push(line);
+      lines.slice(0, maxLines || lines.length).forEach(function (item, index) {
+        ctx.fillText(item, x, y + index * lineHeight);
+      });
+      return y + Math.min(lines.length, maxLines || lines.length) * lineHeight;
+    }
+
+    async function downloadShareImage() {
+      if (!state.lastResult) return;
+      var result = state.lastResult;
+      var canvas = document.createElement("canvas");
+      canvas.width = 900;
+      canvas.height = 1200;
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#f8fcf8";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(95, 70, 710, 760);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#5d675f";
+      ctx.font = "900 48px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("你的 AI 人格类型是：", 450, 138);
+      ctx.fillStyle = "#356b4b";
+      ctx.font = "900 78px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText(result.persona.nickname, 450, 228);
+      ctx.fillStyle = "#185c33";
+      ctx.font = "900 58px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText(result.persona.key, 450, 300);
+
+      try {
+        var personaImg = await loadImage("personas/" + encodeURIComponent(result.persona.key) + ".png");
+        ctx.drawImage(personaImg, 260, 330, 380, 516);
+      } catch (error) {
+        ctx.fillStyle = "#dce7dd";
+        ctx.fillRect(260, 360, 380, 420);
+      }
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#66736b";
+      ctx.font = "800 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("你的主类型", 110, 900);
+      ctx.fillStyle = "#17231d";
+      ctx.font = "900 42px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      drawWrappedText(ctx, result.persona.key + "（" + result.persona.nickname + "）", 110, 958, 520, 54, 2);
+      ctx.fillStyle = "#66736b";
+      ctx.font = "800 28px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("匹配度 " + result.match + "% · 精准命中 " + result.hitCount + "/15 维", 110, 1062);
+
+      try {
+        var qrImg = await loadImage(qrUrl(), true);
+        ctx.drawImage(qrImg, 620, 915, 180, 180);
+      } catch (error) {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(620, 915, 180, 180);
+        ctx.strokeStyle = "#17231d";
+        ctx.strokeRect(620, 915, 180, 180);
+        ctx.fillStyle = "#17231d";
+        ctx.font = "900 26px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        ctx.fillText("扫码入口", 652, 1006);
+      }
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#66736b";
+      ctx.font = "700 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("搜索 NBAI，或扫码重新进入测试页面", 450, 1140);
+
+      try {
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            copyText(shareText(result)).then(function () { toast("图片保存失败，已复制分享链接。"); });
+            return;
+          }
+          var link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "NBAI-" + result.persona.key + ".png";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(link.href);
+          toast("分享图已保存。");
+        }, "image/png");
+      } catch (error) {
+        copyText(shareText(result)).then(function () { toast("图片保存失败，已复制分享链接。"); });
+      }
+    }
+
     function renderResult(result) {
       state.lastResult = result;
       var personaImageSrc = "personas/" + encodeURIComponent(result.persona.key) + ".png";
@@ -1152,7 +1475,7 @@
       return ok;
     }
 
-    function handleAction(action) {
+    function handleAction(action, event) {
       if (action === "start" || action === "manual") {
         state.answers = Array(QUESTIONS.length).fill(null);
         renderTest();
@@ -1180,8 +1503,14 @@
           toast("AI 的答案串有点散，抓回来重排。");
         }
       }
-      if (action === "copy-result" && state.lastResult) {
-        copyText(resultText(state.lastResult)).then(function () { toast("结果已复制，可以发疯了。"); });
+      if (action === "copy-result" && state.lastResult) renderShareOverlay();
+      if (action === "close-share") closeShareOverlay();
+      if (action === "save-share-image") downloadShareImage();
+      if (action === "share-channel" && state.lastResult) {
+        var channel = event.target.closest("[data-channel]").dataset.channel;
+        copyText(shareText(state.lastResult, channel)).then(function () {
+          toast(channel + "分享文案已复制。");
+        });
       }
       if (action === "copy-recognition" && state.lastResult) {
         copyText("这是我的 NBAI 结果，你认吗？\n\n" + resultText(state.lastResult)).then(function () { toast("已复制给 AI 质询专用文本。"); });
@@ -1194,6 +1523,10 @@
     }
 
     document.addEventListener("click", function (event) {
+      if (event.target.id === "shareOverlay") {
+        closeShareOverlay();
+        return;
+      }
       var option = event.target.closest(".option");
       if (option) {
         var questionIndex = Number(option.dataset.question);
@@ -1207,7 +1540,7 @@
         return;
       }
       var actionEl = event.target.closest("[data-action]");
-      if (actionEl) handleAction(actionEl.dataset.action);
+      if (actionEl) handleAction(actionEl.dataset.action, event);
     });
 
     document.addEventListener("DOMContentLoaded", function () {
