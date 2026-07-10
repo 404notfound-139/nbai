@@ -858,7 +858,7 @@
       { text: "凌晨一点工作还没干完，deadline近在眼前，打开 AI你通常会？", meta: "模型意图已隐藏", answers: [
         { text: "先把这一坨全部丢过去，让它看着办", weights: { claude: 2, doubao: 1, chatgpt: 1 }, dims: { empathy: 2, prompt: 0 } },
         { text: "让它找个skill来干", weights: { skill: 3, agent: 1 }, dims: { automation: 2, prompt: 1 } },
-        { text: "你是一个有百年经验的xxx，喂上下文、搭骨架、约束限制、验收标准全写上", weights: { cursor: 2, token: 1, prompt: 3, context: 2, api: 2 }, dims: { prompt: 3, context: 3 } }
+        { text: "你是一个有百年经验的xx角色，喂上下文、搭骨架、约束限制、验收标准全写上", weights: { cursor: 2, token: 1, prompt: 3, context: 2, api: 2 }, dims: { prompt: 3, context: 3 } }
       ] },
       { text: "AI 说“请提供更多上下文”，你第一反应是", meta: "人格权重已隐藏", answers: [
         { text: "行，我刚才确实像让它算命。", weights: { claude: 2, copilot: 1 }, dims: { empathy: 2, context: 1 } },
@@ -926,7 +926,7 @@
         { text: "费token，我比ai便宜多了", weights: { deepseek: 2, token: 2, powershell: 1 }, dims: { price: 3, automation: 1 } }
       ] },
       { text: "刷到一篇ai写的文章，你会", meta: "人格权重已隐藏", answers: [
-        { text: "电子潲水ai味太重，我才不看。", weights: { rag: 2, deepseek: 2 }, dims: { retrieval: 3, empathy: 0 } },
+        { text: "电子潲水没有营养，我才不看。", weights: { rag: 2, deepseek: 2 }, dims: { retrieval: 3, empathy: 0 } },
         { text: "这真的是ai写的吗？", weights: { llm: 2, github: 2, claude: 1, rag: 1 }, dims: { retrieval: 2, models: 2 } },
         { text: "我将严肃阅读", weights: { doubao: 2, chatgpt: 2, markdown: 1 }, dims: { social: 2, empathy: 2 } }
       ] },
