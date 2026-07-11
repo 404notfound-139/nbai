@@ -268,6 +268,7 @@
     }
     .result-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 18px;
       margin-top: 22px;
@@ -353,6 +354,64 @@
     .vocab {
       border-left: 5px solid var(--acid);
       background: #fbfdf1;
+    }
+    .gallery-hero {
+      padding: clamp(24px, 5vw, 42px);
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #f7fbf3, #fff);
+    }
+    .gallery-hero h1 {
+      margin: 8px 0 10px;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      padding: 20px;
+    }
+    .persona-card {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdf9;
+    }
+    .persona-card-top {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .persona-card-img {
+      width: 82px;
+      height: 110px;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+    }
+    .persona-card-key {
+      margin: 0;
+      color: var(--green);
+      font-size: 20px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+    .persona-card-name {
+      margin: 4px 0 0;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .persona-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 14px;
     }
     .dim-list { display: grid; gap: 10px; }
     .dim {
@@ -556,10 +615,11 @@
       .result-persona-img { width: min(300px, 78vw); }
       .tags { justify-content: center; }
       .result-actions { gap: 12px; }
-      .result-actions .btn { min-width: 0; flex: 1 1 0; width: auto; font-size: 20px; padding: 0 18px; }
+      .result-actions .btn { min-width: min(100%, 150px); flex: 1 1 150px; width: auto; font-size: 20px; padding: 0 18px; }
       .section { padding: 20px; }
       .result-summary { padding: 20px; }
       .dim-top { display: block; }
+      .gallery-grid { grid-template-columns: 1fr; padding: 14px; }
       .share-overlay { align-items: flex-start; overflow: auto; padding: 20px 12px; }
       .share-card { padding: 16px; }
       .share-card-title { font-size: 20px; }
@@ -579,6 +639,7 @@
     <section id="test" class="hidden"></section>
     <section id="aiMode" class="hidden"></section>
     <section id="result" class="hidden card"></section>
+    <section id="gallery" class="hidden card"></section>
   </main>
   <div id="toast" class="toast" aria-live="polite"></div>
   <div id="shareOverlay" class="share-overlay hidden" aria-modal="true" role="dialog"></div>
@@ -1013,7 +1074,7 @@
 
     function showView(view) {
       state.view = view;
-      ["home", "test", "aiMode", "result"].forEach(function (id) {
+      ["home", "test", "aiMode", "result", "gallery"].forEach(function (id) {
         byId(id).classList.toggle("hidden", id !== view);
       });
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1126,6 +1187,34 @@
         '</div>' +
         '</div>';
       showView("aiMode");
+    }
+
+    function renderPersonaGallery() {
+      var cards = PERSONAS.map(function (persona) {
+        var imageSrc = "personas/" + encodeURIComponent(persona.key) + ".png";
+        return '<article class="persona-card">' +
+          '<div class="persona-card-top">' +
+          '<img class="persona-card-img" src="' + imageSrc + '" alt="' + escapeHtml(persona.key) + ' 小人">' +
+          '<div>' +
+          '<h2 class="persona-card-key">' + escapeHtml(persona.key) + '</h2>' +
+          '<div class="persona-card-name">' + escapeHtml(persona.nickname) + '</div>' +
+          '</div>' +
+          '</div>' +
+          '<p>' + escapeHtml(persona.vocab) + '</p>' +
+          '</article>';
+      }).join("");
+      byId("gallery").innerHTML =
+        '<div class="gallery-hero">' +
+        '<div class="eyebrow">NBAI 27 人格图鉴</div>' +
+        '<h1>所有 AI 人格和黑话科普</h1>' +
+        '<p class="subtitle">每个小人对应一个结果人格，也顺手解释一个 AI 圈常见词。</p>' +
+        '<div class="actions">' +
+        '<button class="btn btn-secondary" data-action="home">回到首页</button>' +
+        '<button class="btn btn-primary" data-action="back-result">回到结果</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="gallery-grid">' + cards + '</div>';
+      showView("gallery");
     }
 
     function levelFor(score, max) {
@@ -1539,6 +1628,7 @@
         '<p class="hint">做本测试初衷是想让小白同学更了解ai也更了解自己，并科普一些黑话和词汇，从一个ai builder 变成 influencer。</p>' +
         '<div class="result-actions">' +
         '<button class="btn btn-secondary" data-action="restart">重新测试</button>' +
+        '<button class="btn btn-secondary" data-action="gallery">查看所有人格</button>' +
         '<button class="btn btn-primary" data-action="home">回到首页</button>' +
         '</div>' +
         '</section>';
@@ -1594,6 +1684,11 @@
         }
       }
       if (action === "copy-result" && state.lastResult) renderShareOverlay();
+      if (action === "gallery") renderPersonaGallery();
+      if (action === "back-result") {
+        if (state.lastResult) showView("result");
+        else showView("home");
+      }
       if (action === "close-share") closeShareOverlay();
       if (action === "save-share-image") downloadShareImage();
       if (action === "share-channel" && state.lastResult) {
